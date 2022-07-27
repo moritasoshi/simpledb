@@ -6,7 +6,7 @@ import (
 
 type (
 	Page struct {
-		bb ByteBuffer
+		bb core.ByteBuffer
 	}
 )
 
@@ -16,16 +16,21 @@ const (
 
 func NewPage(blockSize int) *Page {
 	return &Page{
-		bb: make([]byte, blockSize),
+		bb: *core.NewByteBuffer(blockSize),
 	}
 }
 
-func setString(offset int, s string) {
+// 指定した位置offsetに文字列sを配置する
+func (p *Page) SetString(offset int, s string) {
 	b := []byte(s)
-	setBytes(offset, b)
+	p.setBytes(offset, b)
 }
 
-func setBytes(offset int, b []byte) {
+// 指定した位置offsetにバイト配列bを配置する
+func (p *Page) setBytes(offset int, b []byte) {
+	p.bb.Position(offset)
+	p.bb.PutInt(len(b))
+	p.bb.Put(b)
 }
 
 func (page *Page) GetUInt32(offset int64) (uint32, error) {

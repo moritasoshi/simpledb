@@ -11,8 +11,6 @@ func TestFile(t *testing.T) {
 	pos1 := 88
 
 	p1 := NewPage(fm.blockSize)
+	p1.SetString(pos1, "abcdefghijklm")
 
-	if reflect.TypeOf(fm) != reflect.TypeOf(1) {
-		t.Fatal("failed test")
-	}
 }
