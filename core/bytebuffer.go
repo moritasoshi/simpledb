@@ -1,24 +1,30 @@
 package core
 
 type ByteBuffer struct {
-	hb       []byte
-	position int
+	buf []byte
+	off int
 }
 
 func NewByteBuffer(blockSize int) *ByteBuffer {
 	return &ByteBuffer{
-		hb:       make([]byte, blockSize),
-		position: 0,
+		buf: make([]byte, blockSize),
+		off: 0,
 	}
 }
 
-func (bb *ByteBuffer) Position(newPosition int) *ByteBuffer {
-	bb.position = newPosition
-	return bb
+func (bb *ByteBuffer) Write(b []byte) (int, error) {
+	cnt := copy(bb.buf[bb.off:], b)
+	bb.off += cnt
+	return cnt, nil
 }
 
-func (bb *ByteBuffer) PutInt(size int) {}
-func (bb *ByteBuffer) GetInt()         {}
-func (bb *ByteBuffer) Put(src []byte) {
+func (bb *ByteBuffer) Read(b []byte) (int, error) {
+	cnt := copy(b, bb.buf[bb.off:])
+	bb.off += cnt
+	return cnt, nil
+}
 
+func (bb *ByteBuffer) Seek(offset int) (int, error) {
+	bb.off = offset
+	return offset, nil
 }

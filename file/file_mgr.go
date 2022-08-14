@@ -6,18 +6,22 @@ import (
 )
 
 type FileMgr struct {
-	blockSize int
+	dbDerectory os.File
+	blockSize   int
+	isNew       bool
+	openFiles   map[string]os.File
 }
 
 func NewFileMgr(filename string, blockSize int) *FileMgr {
-
-	if !exists(filename) {
+	isNew := !exists(filename)
+	if isNew {
 		if err := os.Mkdir(filename, 0777); err != nil {
 			fmt.Println(err)
 		}
 	}
 	return &FileMgr{
 		blockSize: blockSize,
+		isNew:     isNew,
 	}
 }
 

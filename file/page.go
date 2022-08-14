@@ -2,17 +2,23 @@ package file
 
 import (
 	"github.com/moritasoshi/simpledb/core"
+	"github.com/moritasoshi/simpledb/util"
 )
 
-type (
-	Page struct {
-		bb core.ByteBuffer
-	}
-)
+const INT64_BYTES = 8
 
-const (
-	blocksize = 400
-)
+type Page struct {
+	bb core.ByteBuffer
+}
+
+type Pager interface {
+	GetInt(offset int) int
+	GetBytes(offset int) []byte
+	GetString(offset int) string
+	SetInt(offset int, val int)
+	SetBytes(offset int, val []byte)
+	SetString(offset int, val string)
+}
 
 func NewPage(blockSize int) *Page {
 	return &Page{
@@ -20,32 +26,33 @@ func NewPage(blockSize int) *Page {
 	}
 }
 
-// 指定した位置offsetに文字列sを配置する
 func (p *Page) SetString(offset int, s string) {
-	b := []byte(s)
-	p.setBytes(offset, b)
+	p.SetInt64(offset, int64(len(s)))
+	p.setBytes(offset+INT64_BYTES, []byte(s))
+}
+func (p *Page) GetString(offset int) string {
+	bufSize := p.GetInt64(offset)
+	buf := make([]byte, bufSize)
+	p.bb.Read(buf)
+	return string(buf)
 }
 
-// 指定した位置offsetにバイト配列bを配置する
+func (p *Page) SetInt64(offset int, i int64) {
+	p.bb.Seek(offset)
+	p.bb.Write(util.Int64ToBytes(i))
+}
+func (p *Page) GetInt64(offset int) int64 {
+	buf := make([]byte, INT64_BYTES)
+	p.bb.Seek(offset)
+	p.bb.Read(buf)
+	return util.BytesToInt64(buf)
+}
+
 func (p *Page) setBytes(offset int, b []byte) {
-	p.bb.Position(offset)
-	p.bb.PutInt(len(b))
-	p.bb.Put(b)
+	p.bb.Seek(offset)
+	p.bb.Write(b)
 }
 
-func (page *Page) GetUInt32(offset int64) (uint32, error) {
-	if page == nil {
-		return 0, nil
-	}
-
-	// if _, err := page.bb.Seek(offset, io.SeekStart); err != nil {
-	// 	return 0, err
-	// }
-
-	var ret uint32
-	// if err := binary.Read(page.bb, binary.BigEndian, &ret); err != nil {
-	// 	return 0, err
-	// }
-
-	return ret, nil
+func (p *Page) MaxLength(len int) int {
+	return INT64_BYTES + len
 }
