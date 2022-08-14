@@ -1,4 +1,4 @@
-package core
+package bytes
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 )
 
 func TestByteBuffer(t *testing.T) {
-	buf := NewByteBuffer(400)
+	buf := NewBuffer(400)
 
 	buf.Seek(0)
 	buf.Write([]byte("abcdef"))

@@ -1,14 +1,14 @@
 package file
 
 import (
-	"github.com/moritasoshi/simpledb/core"
+	"github.com/moritasoshi/simpledb/bytes"
 	"github.com/moritasoshi/simpledb/util"
 )
 
 const INT64_BYTES = 8
 
 type Page struct {
-	bb core.ByteBuffer
+	bb bytes.Buffer
 }
 
 type Pager interface {
@@ -22,7 +22,7 @@ type Pager interface {
 
 func NewPage(blockSize int) *Page {
 	return &Page{
-		bb: *core.NewByteBuffer(blockSize),
+		bb: *bytes.NewBuffer(blockSize),
 	}
 }
 
