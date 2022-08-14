@@ -6,7 +6,7 @@ import (
 )
 
 func TestFile(t *testing.T) {
-	fm := NewFileMgr("filetest", 400)
+	fm := NewFileManager("filetest", 400)
 	// blk := BlockId{"testfile", 2}
 	p1 := NewPage(fm.blockSize)
 
