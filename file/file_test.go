@@ -6,8 +6,8 @@ import (
 )
 
 func TestFile(t *testing.T) {
-	fm := NewFileManager("filetest", 400)
-	// blk := BlockId{"testfile", 2}
+	fm := NewManager("filetest", 400)
+	blk := &BlockId{"testfile", 2}
 	p1 := NewPage(fm.blockSize)
 
 	pos1 := 88
@@ -23,7 +23,7 @@ func TestFile(t *testing.T) {
 	// 	fmt.Printf("buf[%d]: %d\n", i, b)
 	// }
 
-	// fm.Write(blk)
+	fm.Write(blk, p1)
 	//
 	// p2 := NewPage(fm.blockSize)
 	// fm.Read(blk, p2)

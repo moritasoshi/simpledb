@@ -41,6 +41,13 @@ func (p *Page) SetInt(offset int, i int) {
 	p.set(offset, b)
 }
 
+func (p *Page) Contents() []byte {
+	p.bb.Seek(0)
+	buf := make([]byte, p.bb.Cap())
+	p.bb.Read(buf)
+	return buf
+}
+
 func (p *Page) MaxLength(len int) int {
 	return INT64_BYTES + len
 }

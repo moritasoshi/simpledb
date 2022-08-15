@@ -2,12 +2,14 @@ package bytes
 
 type Buffer struct {
 	buf []byte
+	cap int
 	off int
 }
 
 func NewBuffer(blockSize int) *Buffer {
 	return &Buffer{
 		buf: make([]byte, blockSize),
+		cap: blockSize,
 		off: 0,
 	}
 }
@@ -27,4 +29,8 @@ func (bb *Buffer) Read(b []byte) (int, error) {
 func (bb *Buffer) Seek(offset int) (int, error) {
 	bb.off = offset
 	return offset, nil
+}
+
+func (bb *Buffer) Cap() int {
+	return bb.cap
 }
