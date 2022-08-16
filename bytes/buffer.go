@@ -34,3 +34,7 @@ func (bb *Buffer) Seek(offset int) (int, error) {
 func (bb *Buffer) Cap() int {
 	return bb.cap
 }
+
+func (bb *Buffer) Buf() []byte {
+	return bb.buf
+}

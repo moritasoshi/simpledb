@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -49,6 +48,17 @@ func (fm *Manager) Write(b *BlockId, page *Page) {
 		}
 	}
 	f.Seek(int64(b.blknum*fm.blockSize), io.SeekStart)
-	io.WriteString(os.Stdout, strconv.Itoa(b.blknum*fm.blockSize))
 	f.Write(page.Contents())
+}
+
+func (fm *Manager) Read(b *BlockId, page *Page) {
+	filepath := filepath.Join(fm.dirname, b.filename)
+	f, err := os.Open(filepath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	f.Seek(int64((b.blknum)*fm.blockSize), io.SeekStart)
+	buf := make([]byte, fm.blockSize)
+	f.Read(buf)
+	page.setBytes(0, buf)
 }
