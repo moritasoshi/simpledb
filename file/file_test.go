@@ -23,11 +23,55 @@ func TestFile(t *testing.T) {
 	fmt.Printf("offset %d contains %d\n", pos2, p2.GetInt(pos2))
 	fmt.Printf("offset %d contains %s\n", pos1, p2.GetString(pos1))
 
-	expected := "abcdefghijklm"
-	actual := p2.GetString(pos1)
-
-	if expected != actual {
-		t.Fatalf("test failed. expected: %s, actual: %s", expected, actual)
+	type args struct {
+		page     *Page
+		position int
 	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "GetInt() on read",
+			args: args{page: p2, position: pos2},
+			want: 345,
+		},
+		{
+			name: "GetInt() on written",
+			args: args{page: p1, position: pos2},
+			want: 345,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.args.page.GetInt(tt.args.position); got != tt.want {
+				t.Errorf("GetInt() = %v, want %v", got, tt.want)
+			}
+		})
 
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "GetString() on read",
+			args: args{page: p2, position: pos1},
+			want: "abcdefghijklm",
+		},
+		{
+			name: "GetString() on written",
+			args: args{page: p1, position: pos1},
+			want: "abcdefghijklm",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.args.page.GetString(tt.args.position); got != tt.want {
+				t.Errorf("GetString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+	}
 }
