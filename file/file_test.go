@@ -27,7 +27,7 @@ func TestFile(t *testing.T) {
 		page     *Page
 		position int
 	}
-	tests := []struct {
+	testInt := []struct {
 		name string
 		args args
 		want int
@@ -43,14 +43,15 @@ func TestFile(t *testing.T) {
 			want: 345,
 		},
 	}
-	for _, tt := range tests {
+	for _, tt := range testInt {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.args.page.GetInt(tt.args.position); got != tt.want {
 				t.Errorf("GetInt() = %v, want %v", got, tt.want)
 			}
 		})
+	}
 
-	tests := []struct {
+	testStr := []struct {
 		name string
 		args args
 		want string
@@ -66,12 +67,11 @@ func TestFile(t *testing.T) {
 			want: "abcdefghijklm",
 		},
 	}
-	for _, tt := range tests {
+	for _, tt := range testStr {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.args.page.GetString(tt.args.position); got != tt.want {
 				t.Errorf("GetString() = %v, want %v", got, tt.want)
 			}
 		})
-	}
 	}
 }

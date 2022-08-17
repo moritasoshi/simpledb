@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/moritasoshi/simpledb/file"
+// "github.com/moritasoshi/simpledb/file"
 )
 
 const (
@@ -11,11 +11,11 @@ const (
 )
 
 type SimpleDB struct {
-	Fm file.FileManager
+	// Fm file.FileManager
 }
 
 func NewSimpleDB(dirname string, blockSize int, bufferSize int) *SimpleDB {
 	return &SimpleDB{
-		Fm: *file.NewFileManager(dirname, blockSize),
+		// Fm: *file.NewFileManager(dirname, blockSize),
 	}
 }
