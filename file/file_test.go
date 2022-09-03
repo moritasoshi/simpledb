@@ -6,18 +6,18 @@ import (
 )
 
 func TestFile(t *testing.T) {
-	fm := NewManager("filetest", 400)
-	blk := &BlockId{"testfile", 2}
-	p1 := NewPage(fm.blockSize)
+	fm, _ := NewManager("filetest", 400)
+	blk := NewBlockId("testfile", 2)
+	p1, _ := NewPage(fm.blockSize)
 
 	pos1 := 88
 	p1.SetString(pos1, "abcdefghijklm")
-	pos2 := pos1 + p1.MaxLength(len("abcdefghijklm"))
+	pos2 := pos1 + MaxLength(len("abcdefghijklm"))
 	p1.SetInt(pos2, 345)
 
 	fm.Write(blk, p1)
 
-	p2 := NewPage(fm.blockSize)
+	p2, _ := NewPage(fm.blockSize)
 	fm.Read(blk, p2)
 
 	fmt.Printf("offset %d contains %d\n", pos2, p2.GetInt(pos2))
@@ -74,4 +74,9 @@ func TestFile(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetFile(t *testing.T) {
+
+
 }

@@ -8,19 +8,31 @@ import (
 const INT64_BYTES = 8
 
 type Page struct {
-	bb bytes.Buffer
+	bb *bytes.Buffer
 }
 
 type Pager interface {
 	GetInt(offset int) int
 	GetString(offset int) string
+	GetBytes(offset int) []byte
 	SetInt(offset int, val int)
 	SetString(offset int, val string)
+	SetBytes(offset int, val []byte)
 }
 
-func NewPage(blockSize int) *Page {
+func NewPage(blockSize int) (*Page, error) {
+	buf, err := bytes.NewBuffer(blockSize)
+	if err != nil {
+		return nil, err
+	}
 	return &Page{
-		bb: *bytes.NewBuffer(blockSize),
+		bb: buf,
+	}, nil
+}
+
+func NewPageWithBytes(b []byte) *Page {
+	return &Page{
+		bb: bytes.NewBufferWithBytes(b),
 	}
 }
 
@@ -40,6 +52,13 @@ func (p *Page) SetInt(offset int, i int) {
 	b := util.Int64ToBytes(int64(i))
 	p.set(offset, b)
 }
+func (p *Page) GetBytes(offset int) []byte {
+	buf := p.get(offset)
+	return buf
+}
+func (p *Page) SetBytes(offset int, b []byte) {
+	p.set(offset, b)
+}
 
 func (p *Page) Contents() []byte {
 	p.bb.Seek(0)
@@ -48,7 +67,7 @@ func (p *Page) Contents() []byte {
 	return buf
 }
 
-func (p *Page) MaxLength(len int) int {
+func MaxLength(len int) int {
 	return INT64_BYTES + len
 }
 
