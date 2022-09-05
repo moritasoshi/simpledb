@@ -3,7 +3,6 @@ package bytes
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"testing"
 )
 
@@ -19,67 +18,39 @@ func TestByteBuffer(t *testing.T) {
 	buf.Seek(0)
 	buf.Read(act)
 
-	fmt.Printf("expect: %s\n", []byte("abcdef"))
-	fmt.Printf("act:    %s\n", act)
 	if string(act) != "abcdef" {
-		t.Fatalf("failed test\n")
+		t.Errorf("expected %q, got %q", "abcdef", string(act))
 	}
 }
 
-func Test_NewBuffer(t *testing.T) {
-	buf, _ := NewBuffer(100)
-	cases := map[string]struct {
-		in   int
-		want int
+func TestNewBuffer(t *testing.T) {
+	tests := []struct {
+		bufSize  int
+		expected int
+		err      error
 	}{
-		"offset_0":     {buf.off, 0},
-		"capacity_100": {buf.cap, 100},
-		"size_100":     {len(buf.buf), 100},
+		{0, 0, nil},
+		{100, 100, nil},
 	}
-	for name, tt := range cases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			if tt.in != tt.want {
-				t.Errorf("actual %v, want %v", tt.in, tt.want)
-			}
-		})
+	for _, test := range tests {
+		buf, err := NewBuffer(test.bufSize)
+		if err != test.err {
+			t.Errorf("expected error %v, got %v", test.err, err)
+		}
+		if buf.cap != test.expected {
+			t.Errorf("expected %q, got %q", test.expected, buf.cap)
+		}
 	}
-	t.Run("buffer = [0,0,...,0]", func(t *testing.T) {
-		t.Parallel()
-		for _, byte := range buf.buf {
-			if byte != 0 {
-				t.Errorf("actual %v, want %v", byte, 0)
-			}
-		}
-	})
-	// Errors
-	t.Run("error", func(t *testing.T) {
-		_, err := NewBuffer(-1)
-		if !errors.Is(err, ErrInvalidBufSize) {
-			t.Errorf("actual %v, want %v", err, ErrInvalidBufSize)
-		}
-	})
-
 }
+func TestNewBufferOutOfRange(t *testing.T) {
+	buf, err := NewBuffer(-1)
+	if buf != nil {
+		t.Errorf("expected <nil>; got %v", buf)
+	}
+	if !errors.Is(err, ErrInvalidBufSize) {
+		t.Errorf("expected error %v, got %v", ErrInvalidBufSize, err)
+	}
 
-func Test_NewBufferWithBytes(t *testing.T) {
-	buf := NewBufferWithBytes([]byte("hello world"))
-	cases := map[string]struct {
-		in   int
-		want int
-	}{
-		"offset_0":    {buf.off, 0},
-		"capacity_11": {buf.cap, 11},
-		"size_11":     {len(buf.buf), 11},
-	}
-	for name, tt := range cases {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			if tt.in != tt.want {
-				t.Errorf("actual %v, want %v", tt.in, tt.want)
-			}
-		})
-	}
 }
 
 func Test_Seek(t *testing.T) {
@@ -95,7 +66,6 @@ func Test_Seek(t *testing.T) {
 	}
 	for name, tt := range cases {
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
 			off, err := buf.Seek(tt.in)
 			if tt.expectErr {
 				if err == nil {
@@ -127,7 +97,6 @@ func TestWrite(t *testing.T) {
 	}
 	for name, tt := range cases {
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
 			buf, _ := NewBuffer(10)
 			cnt, err := buf.Write([]byte(tt.in))
 			if tt.expectErr {
