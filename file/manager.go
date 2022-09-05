@@ -9,8 +9,6 @@ import (
 	"strings"
 )
 
-var ErrOutOfRange = errors.New("file.Manager: out of range")
-
 type Manager struct {
 	dirname   string
 	blockSize int
@@ -19,10 +17,10 @@ type Manager struct {
 
 func NewManager(dirname string, blockSize int) (*Manager, error) {
 	if blockSize < 0 {
-		return nil, ErrOutOfRange
+		return nil, errors.New("file.Manager: NewManager: block size must be greater than 0")
 	}
 	if len(dirname) <= 0 {
-		return nil, errors.New("filename should be 1 character or more")
+		return nil, errors.New("file.Manager: NewManager: invalid filename")
 	}
 
 	// create directory if not exists

@@ -2,8 +2,11 @@ package file
 
 import (
 	"fmt"
+
 	"testing"
 )
+
+const wantErr, noErr = true, false
 
 func TestFile(t *testing.T) {
 	fm, _ := NewManager("filetest", 400)
@@ -74,9 +77,4 @@ func TestFile(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestGetFile(t *testing.T) {
-
-
 }

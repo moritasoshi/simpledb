@@ -2,6 +2,7 @@ package bytes
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"testing"
 )
@@ -51,12 +52,11 @@ func Test_NewBuffer(t *testing.T) {
 			}
 		}
 	})
-
 	// Errors
 	t.Run("error", func(t *testing.T) {
 		_, err := NewBuffer(-1)
-		if err != ErrOutOfRange {
-			t.Errorf("actual %v, want %v", err, ErrOutOfRange)
+		if !errors.Is(err, ErrInvalidBufSize) {
+			t.Errorf("actual %v, want %v", err, ErrInvalidBufSize)
 		}
 	})
 
