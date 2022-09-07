@@ -16,21 +16,19 @@ const INT64_BYTES = 8
 
 var (
 	ErrBufferOverflow = errors.New("buffer overflow")
-	ErrInvalidBufSize = errors.New("invalid buffer size")
-	ErrInvalidOffset  = errors.New("invalid offset")
 	ErrOutOfRange     = errors.New("out of range")
 )
 
-func NewBuffer(bufSize int) (*Buffer, error) {
-	if bufSize < 0 {
-		return nil, fmt.Errorf("buffer.NewBuffer: %w", ErrInvalidBufSize)
+// String returns the contents of the buffer as a string.
+func (b *Buffer) String() string {
+	if b.buf == nil {
+		return "<nil>"
 	}
-	return &Buffer{
-		buf: make([]byte, bufSize),
-		cap: bufSize,
-		off: 0,
-	}, nil
+	return string(b.buf[b.off:])
 }
+
+// empty reports whether the unread portion of the buffer is empty.
+func (b *Buffer) empty() bool { return len(b.buf) <= b.off }
 
 func (bb *Buffer) Write(b []byte) (int, error) {
 	if bb.off+len(b) > bb.cap {
@@ -41,24 +39,20 @@ func (bb *Buffer) Write(b []byte) (int, error) {
 	return cnt, nil
 }
 
-func (bb *Buffer) Read(b []byte) (int, error) {
-	cnt := copy(b, bb.buf[bb.off:])
-	n := bb.off + cnt
-	var err error
-	if n == bb.cap {
-		err = io.EOF
-	} else if n > bb.cap {
-		panic("bytes.Buffer: Read: invalid read count")
+func (bb *Buffer) Read(p []byte) (n int, err error) {
+	if bb.empty() {
+		if len(p) == 0 {
+			return 0, nil
+		}
+		return 0, io.EOF
 	}
-	bb.off += cnt
-	return cnt, err
+	n = copy(p, bb.buf[bb.off:])
+	bb.off += n
+	return n, nil
 }
 
 func (bb *Buffer) Seek(offset int) (int, error) {
-	if offset < 0 {
-		return 0, fmt.Errorf("bytes.Buffer: Seek: %w", ErrInvalidOffset)
-	}
-	if offset > bb.cap {
+	if offset < 0 || offset > bb.cap {
 		return 0, fmt.Errorf("bytes.Buffer: Seek: %w", ErrOutOfRange)
 	}
 	bb.off = offset
@@ -69,6 +63,13 @@ func (bb *Buffer) Cap() int {
 	return bb.cap
 }
 
-func (bb *Buffer) Buf() []byte {
-	return bb.buf
+func NewBuffer(cap int) (*Buffer, error) {
+	if cap < 0 {
+		return nil, (fmt.Errorf("buffer.NewBuffer: capacity %w", ErrOutOfRange))
+	}
+	return &Buffer{
+		buf: make([]byte, cap),
+		cap: cap,
+		off: 0,
+	}, nil
 }

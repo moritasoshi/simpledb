@@ -2,6 +2,7 @@ package file
 
 import (
 	"errors"
+	"io"
 	"testing"
 
 	"github.com/moritasoshi/simpledb/bytes"
@@ -13,7 +14,7 @@ func TestNewPage(t *testing.T) {
 		want      error
 		expectErr bool
 	}{
-		"error_-1": {-1, bytes.ErrInvalidBufSize, wantErr},
+		"error_-1": {-1, bytes.ErrOutOfRange, wantErr},
 		"0":        {0, nil, noErr},
 		"10":       {10, nil, noErr},
 	}
@@ -41,7 +42,8 @@ func TestSetString(t *testing.T) {
 	cases := map[string]struct {
 		in        args
 		expectErr bool
-	}{"ab": {args{0, "ab"}, noErr},
+	}{
+		"ab": {args{0, "ab"}, noErr},
 		"12": {args{0, "12"}, noErr},
 		"*$": {args{0, "*$"}, noErr},
 		"error_overflow_for_head8_and_body3bytes": {args{0, "abc"}, wantErr},
@@ -73,14 +75,22 @@ func TestGetString(t *testing.T) {
 		err      error
 	}{
 		{"buffer", 0, "buffer", nil},
-		// {"buffer", 6, "buffer", nil},
+		{"buffer", 14, "", io.EOF},
+		{"buffer", 100, "", bytes.ErrOutOfRange},
 	}
 	for _, test := range getStringTests {
-		p, _ := NewPageWithBytes([]byte(test.buffer))
+		p, err := NewPageBytes([]byte(test.buffer))
+		if err != nil {
+			panic("")
+		}
 		var str string
-		str = p.GetString(test.offset)
+		str, err = p.GetString(test.offset)
 		if str != test.expected {
-			t.Errorf("expected %q, got %q", test.expected, str)
+			a := p.Contents()
+			t.Errorf("expected %q, got %q, contents %v", test.expected, str, a)
+		}
+		if !errors.Is(err, test.err) {
+			t.Errorf("expected %v, got %v", test.err, err)
 		}
 	}
 }

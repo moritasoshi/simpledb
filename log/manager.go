@@ -55,13 +55,13 @@ func (lm *Manager) Iterator() *Iterator {
 // of the last-written record (the "boundary").
 // Storing the records backwards makes it easy to read them in reverse order.
 func (lm *Manager) Append(logRec []byte) int {
-	boundary := lm.logPage.GetInt(0)
+	boundary, _ := lm.logPage.GetInt(0)
 	recSize := len(logRec)
 	bytesNeeded := recSize + INT64_BYTES
 	if boundary-bytesNeeded < INT64_BYTES {
 		lm.flush()
 		lm.currentBlock = lm.AppendNewBlock()
-		boundary = lm.logPage.GetInt(0)
+		boundary, _ = lm.logPage.GetInt(0)
 	}
 	recPos := boundary - bytesNeeded
 

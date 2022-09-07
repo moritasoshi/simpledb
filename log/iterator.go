@@ -41,7 +41,7 @@ func (iter *Iterator) next() []byte {
 		iter.blk = file.NewBlockId(iter.blk.Filename(), iter.blk.Number()-1)
 		iter.moveToBlock(iter.blk)
 	}
-	rec := iter.p.GetBytes(iter.currentPos)
+	rec, _ := iter.p.GetBytes(iter.currentPos)
 	iter.currentPos += INT64_BYTES + len(rec)
 	return rec
 }
@@ -49,6 +49,6 @@ func (iter *Iterator) next() []byte {
 // Moves to the specified block
 func (iter *Iterator) moveToBlock(blk *file.BlockId) {
 	iter.fm.Read(blk, iter.p)
-	iter.boundary = iter.p.GetInt(0)
+	iter.boundary, _ = iter.p.GetInt(0)
 	iter.currentPos = iter.boundary
 }

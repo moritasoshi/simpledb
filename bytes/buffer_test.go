@@ -2,7 +2,6 @@ package bytes
 
 import (
 	"bytes"
-	"errors"
 	"testing"
 )
 
@@ -33,24 +32,11 @@ func TestNewBuffer(t *testing.T) {
 		{100, 100, nil},
 	}
 	for _, test := range tests {
-		buf, err := NewBuffer(test.bufSize)
-		if err != test.err {
-			t.Errorf("expected error %v, got %v", test.err, err)
-		}
+		buf, _ := NewBuffer(test.bufSize)
 		if buf.cap != test.expected {
 			t.Errorf("expected %q, got %q", test.expected, buf.cap)
 		}
 	}
-}
-func TestNewBufferOutOfRange(t *testing.T) {
-	buf, err := NewBuffer(-1)
-	if buf != nil {
-		t.Errorf("expected <nil>; got %v", buf)
-	}
-	if !errors.Is(err, ErrInvalidBufSize) {
-		t.Errorf("expected error %v, got %v", ErrInvalidBufSize, err)
-	}
-
 }
 
 func Test_Seek(t *testing.T) {

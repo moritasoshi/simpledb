@@ -25,29 +25,12 @@ const INT64_BYTES = 8
 
 var ErrTooLarge = errors.New("too large")
 
-func NewPage(blockSize int) (*Page, error) {
-	buf, err := bytes.NewBuffer(blockSize)
+func (p *Page) GetString(offset int) (string, error) {
+	buf, err := p.get(offset)
 	if err != nil {
-		return nil, fmt.Errorf("file.Page: NewPage: %w", err)
+		return "", fmt.Errorf("file.Page: GetString: %w", err)
 	}
-	return &Page{
-		bb: buf,
-	}, nil
-}
-
-func NewPageWithBytes(b []byte) (*Page, error) {
-	l := MaxLength(len(b))
-	p, err := NewPage(l)
-	if err != nil {
-		return nil, fmt.Errorf("file.Page: NewPageWithBytes: %w", err)
-	}
-	p.SetBytes(0, b)
-	return p, nil
-}
-
-func (p *Page) GetString(offset int) string {
-	buf := p.get(offset)
-	return string(buf)
+	return string(buf), nil
 }
 func (p *Page) SetString(offset int, s string) error {
 	b := []byte(s)
@@ -57,20 +40,32 @@ func (p *Page) SetString(offset int, s string) error {
 	}
 	return nil
 }
-func (p *Page) GetInt(offset int) int {
-	buf := p.get(offset)
-	return int(util.BytesToInt64(buf))
+func (p *Page) GetInt(offset int) (int, error) {
+	buf, err := p.get(offset)
+	if err != nil {
+		return 0, fmt.Errorf("file.Page: GetInt: %w", err)
+	}
+	return int(util.BytesToInt64(buf)), nil
 }
-func (p *Page) SetInt(offset int, i int) {
+func (p *Page) SetInt(offset int, i int) error {
 	b := util.Int64ToBytes(int64(i))
-	p.set(offset, b)
+	if err := p.set(offset, b); err != nil {
+		return fmt.Errorf("file.Page: SetInt: %w", err)
+	}
+	return nil
 }
-func (p *Page) GetBytes(offset int) []byte {
-	buf := p.get(offset)
-	return buf
+func (p *Page) GetBytes(offset int) ([]byte, error) {
+	buf, err := p.get(offset)
+	if err != nil {
+		return nil, fmt.Errorf("file.Page: GetBytes: %w", err)
+	}
+	return buf, nil
 }
-func (p *Page) SetBytes(offset int, b []byte) {
-	p.set(offset, b)
+func (p *Page) SetBytes(offset int, b []byte) error {
+	if err := p.set(offset, b); err != nil {
+		return fmt.Errorf("file.Page: SetBytes: %w", err)
+	}
+	return nil
 }
 
 func (p *Page) Contents() []byte {
@@ -104,9 +99,17 @@ func (p *Page) set(offset int, b []byte) error {
 	}
 	return nil
 }
-func (p *Page) get(offset int) []byte {
-	bufSize := p.getInt64(offset)
-	return p.getBytes(offset+INT64_BYTES, bufSize)
+
+func (p *Page) get(offset int) ([]byte, error) {
+	len, err := p.getInt64(offset)
+	if err != nil {
+		return nil, fmt.Errorf("file.Page: getInt64: %w", err)
+	}
+	b, err := p.getBytes(offset+INT64_BYTES, len)
+	if err != nil {
+		return nil, fmt.Errorf("file.Page: getInt64: %w", err)
+	}
+	return b, nil
 }
 func (p *Page) setInt64(offset int, i int64) error {
 	_, err := p.bb.Seek(offset)
@@ -119,11 +122,17 @@ func (p *Page) setInt64(offset int, i int64) error {
 	}
 	return nil
 }
-func (p *Page) getInt64(offset int) int64 {
+func (p *Page) getInt64(offset int) (int64, error) {
 	buf := make([]byte, INT64_BYTES)
-	p.bb.Seek(offset)
-	p.bb.Read(buf)
-	return util.BytesToInt64(buf)
+	_, err := p.bb.Seek(offset)
+	if err != nil {
+		return 0, fmt.Errorf("file.Page: getInt64: %w", err)
+	}
+	_, err = p.bb.Read(buf)
+	if err != nil {
+		return 0, fmt.Errorf("file.Page: getInt64: %w", err)
+	}
+	return util.BytesToInt64(buf), nil
 }
 func (p *Page) setBytes(offset int, b []byte) error {
 	_, err := p.bb.Seek(offset)
@@ -136,9 +145,36 @@ func (p *Page) setBytes(offset int, b []byte) error {
 	}
 	return nil
 }
-func (p *Page) getBytes(offset int, size int64) []byte {
-	p.bb.Seek(offset)
+func (p *Page) getBytes(offset int, size int64) ([]byte, error) {
+	_, err := p.bb.Seek(offset)
+	if err != nil {
+		return nil, fmt.Errorf("file.Page: getBytes: %w", err)
+	}
 	buf := make([]byte, size)
-	p.bb.Read(buf)
-	return buf
+	_, err = p.bb.Read(buf)
+	if err != nil {
+		return nil, fmt.Errorf("file.Page: getBytes: %w", err)
+	}
+	return buf, nil
 }
+
+func NewPage(cap int) (*Page, error) {
+	buf, err := bytes.NewBuffer(cap)
+	if err != nil {
+		return nil, fmt.Errorf("file.Page: NewPage: %w", err)
+	}
+	return &Page{
+		bb: buf,
+	}, nil
+}
+
+func NewPageBytes(b []byte) (p *Page, err error) {
+	l := MaxLength(len(b))
+	p, err = NewPage(l)
+	if err != nil {
+		return nil, fmt.Errorf("file.Page: NewPageWithBytes: %w", err)
+	}
+	p.SetBytes(0, b)
+	return p, nil
+}
+

@@ -28,10 +28,10 @@ func printLogRecords(lm *Manager, msg string) {
 	iter := lm.Iterator()
 	for iter.hasNext() {
 		rec := iter.next()
-		p, _ := file.NewPageWithBytes(rec)
-		s := p.GetString(0)
+		p, _ := file.NewPageBytes(rec)
+		s, _ := p.GetString(0)
 		nPos := file.MaxLength(len(s))
-		val := p.GetInt(nPos)
+		val, _ := p.GetInt(nPos)
 		fmt.Printf("[%s, %d]\n", s, val)
 	}
 	fmt.Println()
@@ -52,7 +52,7 @@ func createLogRecords(lm *Manager, s string, n int) []byte {
 	sPos := 0
 	nPos := sPos + file.MaxLength(len(s))
 	b := make([]byte, nPos+INT64_BYTES)
-	p, _ := file.NewPageWithBytes(b)
+	p, _ := file.NewPageBytes(b)
 	p.SetString(sPos, s)
 	p.SetInt(nPos, n)
 	return b

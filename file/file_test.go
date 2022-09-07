@@ -23,8 +23,10 @@ func TestFile(t *testing.T) {
 	p2, _ := NewPage(fm.blockSize)
 	fm.Read(blk, p2)
 
-	fmt.Printf("offset %d contains %d\n", pos2, p2.GetInt(pos2))
-	fmt.Printf("offset %d contains %s\n", pos1, p2.GetString(pos1))
+	i, _ := p2.GetInt(pos2)
+	s, _ := p2.GetString(pos1)
+	fmt.Printf("offset %d contains %d\n", pos2, i)
+	fmt.Printf("offset %d contains %s\n", pos1, s)
 
 	type args struct {
 		page     *Page
@@ -48,7 +50,7 @@ func TestFile(t *testing.T) {
 	}
 	for _, tt := range testInt {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.args.page.GetInt(tt.args.position); got != tt.want {
+			if got, _ := tt.args.page.GetInt(tt.args.position); got != tt.want {
 				t.Errorf("GetInt() = %v, want %v", got, tt.want)
 			}
 		})
@@ -72,7 +74,7 @@ func TestFile(t *testing.T) {
 	}
 	for _, tt := range testStr {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.args.page.GetString(tt.args.position); got != tt.want {
+			if got, _ := tt.args.page.GetString(tt.args.position); got != tt.want {
 				t.Errorf("GetString() = %v, want %v", got, tt.want)
 			}
 		})
