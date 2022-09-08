@@ -8,7 +8,7 @@ import (
 	"github.com/moritasoshi/simpledb/file"
 )
 
-func _TestLog(t *testing.T) {
+func TestLog(t *testing.T) {
 	fm, _ := file.NewManager("logtest", 400)
 	lm := NewManager(fm, "simpledb.log")
 
@@ -49,11 +49,10 @@ func createRecords(lm *Manager, start int, end int) {
 
 // Create a log record having two values: a string and an integer.
 func createLogRecords(lm *Manager, s string, n int) []byte {
-	sPos := 0
-	nPos := sPos + file.MaxLength(len(s))
-	b := make([]byte, nPos+INT64_BYTES)
-	p, _ := file.NewPageBytes(b)
-	p.SetString(sPos, s)
-	p.SetInt(nPos, n)
+	size := file.MaxLength(len(s)) + INT64_BYTES
+	b := make([]byte, size)
+	p, _ := file.NewPage(size)
+	p.SetString(0, s)
+	p.SetInt(file.MaxLength(len(s)), n)
 	return b
 }

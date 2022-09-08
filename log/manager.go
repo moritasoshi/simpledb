@@ -1,5 +1,23 @@
 package log
 
+// log management algorithm
+// 1.  Allocate a page in memory.
+// 2.  Read the last block of the log file into that page.
+// 3a. If there is room, place the log record after the other records on the page,
+//     and write the page back to disk.
+// 3b. If there is no room, then allocate a new, empty page, place the log record in that page,
+//     and append the page to a new block at the end of the log file.
+
+// 1. Permanently allocate one memory page to hold the contents of the last block of the log file.
+//      Call this page P.
+// 2. When a new log record is submitted:
+//      a) If there is no room in P, then:
+//        Write P to disk and clear its contents.
+//      b) Append the new log record to P.
+// 3. When the database system requests that a particular log record be written to disk:
+//      a) Determine if that log record is in P.
+//      b) If so, then write P to disk.
+
 import (
 	"log"
 	"sync"
