@@ -51,16 +51,18 @@ func NewManager(dirname string, blockSize int) (*Manager, error) {
 	}, nil
 }
 
+// Write writes the contents of page into block.
 func (fm *Manager) Write(b *BlockId, page *Page) {
 	f := fm.getFile(b.filename)
 	f.Seek(int64(b.blknum*fm.blockSize), io.SeekStart)
 	f.Write(page.Contents())
 }
 
+// Read reads the contents of block into page.
 func (fm *Manager) Read(b *BlockId, page *Page) {
 	f := fm.getFile(b.filename)
-	f.Seek(int64((b.blknum)*fm.blockSize), io.SeekStart)
 	buf := make([]byte, fm.blockSize)
+	f.Seek(int64((b.blknum)*fm.blockSize), io.SeekStart)
 	f.Read(buf)
 	page.setBytes(0, buf)
 }
