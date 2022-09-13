@@ -2,6 +2,8 @@ package bytes
 
 import (
 	"bytes"
+	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -101,5 +103,17 @@ func TestWrite(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestStringNumber(t *testing.T) {
+	b := "12345"
+	buf, _ := NewBuffer(5)
+	_, _ = buf.Write([]byte(b))
+	buf.Seek(0)
+	if v := buf.String(); v != "12345" {
+		fmt.Println(v == "12345", strings.Compare(v, "12345"))
+		fmt.Println([]byte(v), []byte("12345"))
+		t.Errorf("expected %v, got %v", "12345", v)
 	}
 }
