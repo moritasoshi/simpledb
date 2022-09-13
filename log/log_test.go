@@ -2,19 +2,33 @@ package log
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"testing"
 
 	"github.com/moritasoshi/simpledb/file"
 )
 
+const TEST_DIR = "logtest"
+
+func reset() {
+	if err := os.RemoveAll(TEST_DIR); err != nil {
+		fmt.Println(err)
+	}
+}
+
 func TestLog(t *testing.T) {
+	reset()
 	fm, _ := file.NewManager("logtest", 400)
 	lm := NewManager(fm, "simpledb.log")
 
-	printLogRecords(lm, "The initial empty log file:")
+	// printLogRecords(lm, "The initial empty log file:")
 	fmt.Println("done")
 	createRecords(lm, 1, 35)
+	printLogRecords(lm, "The log file noe has these records:")
+	createRecords(lm, 36, 70)
+	lm.Flush(65)
+	printLogRecords(lm, "The log file noe has these records:")
 
 	t.Run("testlog", func(t *testing.T) {
 		if got := true; !got {
@@ -38,21 +52,21 @@ func printLogRecords(lm *Manager, msg string) {
 }
 
 func createRecords(lm *Manager, start int, end int) {
-	fmt.Print("Creating records: ")
+	// fmt.Print("Creating records: ")
 	for i := start; i <= end; i++ {
 		rec := createLogRecords(lm, "record"+strconv.Itoa(i), i+100)
-		lsn := lm.Append(rec)
-		fmt.Print(lsn, " ")
+		// lsn := lm.Append(rec)
+		_ = lm.Append(rec)
+		// fmt.Print(lsn, " ")
 	}
 	fmt.Println()
 }
 
 // Create a log record having two values: a string and an integer.
 func createLogRecords(lm *Manager, s string, n int) []byte {
-	size := file.MaxLength(len(s)) + INT64_BYTES
-	b := make([]byte, size)
+	size := file.MaxLength(len(s)) + INT64_BYTES*2
 	p, _ := file.NewPage(size)
 	p.SetString(0, s)
 	p.SetInt(file.MaxLength(len(s)), n)
-	return b
+	return p.Contents()
 }

@@ -11,6 +11,18 @@ package log
 //      a) Determine if that log record is in P.
 //      b) If so, then write P to disk.
 
+// a block(page) and log records
+//
+// ------------------------------------------------------------------------------------
+// | block size (400 bytes)                                                           |
+// ------------------------------------------------------------------------------------
+// |                     |                                      ||                    |
+// | boundary (16 bytes) | .................................... || record1 (20 bytes) |
+// |                     |                                      ||                    |
+// ------------------------------------------------------------------------------------
+//
+// boundary = 400 - 20 =  380
+
 import (
 	"log"
 	"sync"
@@ -19,6 +31,7 @@ import (
 )
 
 const INT64_BYTES = 8
+const BOUNDARY_BYTES = INT64_BYTES * 2
 
 type Manager struct {
 	mu           sync.Mutex
@@ -26,7 +39,9 @@ type Manager struct {
 	filename     string
 	page         *file.Page
 	currentBlock *file.BlockId
-	latestLSN    int // Long Sequence Number
+	// latestLSN identifies the new log record.
+	latestLSN int
+	// lastSavedLSN identifies the log record already saved to disk.
 	lastSavedLSN int
 }
 
@@ -53,11 +68,6 @@ func NewManager(fm *file.Manager, filename string) *Manager {
 	}
 }
 
-func (lm *Manager) Iterator() *Iterator {
-	lm.flush()
-	return NewIterator(lm.fm, lm.currentBlock)
-}
-
 // Append appends a log record to the log buffer.
 // Log records are written right to left in the buffer.
 // The size of the record is written before the bytes.
@@ -65,18 +75,33 @@ func (lm *Manager) Iterator() *Iterator {
 // Storing the records backwards makes it easy to read them in reverse order.
 func (lm *Manager) Append(rec []byte) int {
 	boundary, _ := lm.page.GetInt(0)
-	bytesNeeded := len(rec) + INT64_BYTES
-	if boundary-bytesNeeded < INT64_BYTES {
+	len := file.MaxLength(len(rec))
+	// no capacity, so create a new one.
+	if boundary-len < BOUNDARY_BYTES {
 		lm.flush()
+		p, err := file.NewPage(lm.fm.BlockSize())
+		if err != nil {
+			log.Fatal(err)
+		}
+		lm.page = p
 		lm.currentBlock = lm.AppendNewBlock()
 		boundary, _ = lm.page.GetInt(0)
 	}
-	pos := boundary - bytesNeeded
-
+	pos := boundary - len
 	lm.page.SetBytes(pos, rec)
+	// set the boundary
 	lm.page.SetInt(0, pos)
 	lm.latestLSN += 1
 	return lm.latestLSN
+}
+
+// Initialize the bytebuffer and append it to the log file.
+func (lm *Manager) AppendNewBlock() *file.BlockId {
+	blk := lm.fm.Append(lm.filename)
+	// set the boundary on the head of a log record.
+	lm.page.SetInt(0, lm.fm.BlockSize())
+	lm.fm.Write(blk, lm.page)
+	return blk
 }
 
 func (lm *Manager) Flush(lsn int) {
@@ -85,12 +110,9 @@ func (lm *Manager) Flush(lsn int) {
 	}
 }
 
-// Initialize the bytebuffer and append it to the log file.
-func (lm *Manager) AppendNewBlock() *file.BlockId {
-	blk := lm.fm.Append(lm.filename)
-	lm.page.SetInt(0, lm.fm.BlockSize())
-	lm.fm.Write(blk, lm.page)
-	return blk
+func (lm *Manager) Iterator() *Iterator {
+	lm.flush()
+	return NewIterator(lm.fm, lm.currentBlock)
 }
 
 // Write the buffer to the log file.
