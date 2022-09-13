@@ -74,8 +74,14 @@ func (fm *Manager) Append(filename string) *BlockId {
 	b := make([]byte, fm.blockSize)
 
 	f := fm.getFile(blk.filename)
-	f.Seek(int64((blk.blknum)*fm.blockSize), io.SeekStart)
-	f.Write(b)
+	_, err := f.Seek(int64((blk.blknum)*fm.blockSize), io.SeekStart)
+	if err != nil {
+		log.Fatal("file.Manager: Append: %w", err)
+	}
+	_, err = f.Write(b)
+	if err != nil {
+		log.Fatal("file.Manager: Append: %w", err)
+	}
 	return blk
 }
 

@@ -32,6 +32,9 @@ func (p *Page) GetString(offset int) (string, error) {
 	}
 	return string(buf), nil
 }
+
+// SetString set two valuse: length of string and contents themselves.
+// That is why SetString needs 8bytes and contents length.
 func (p *Page) SetString(offset int, s string) error {
 	b := []byte(s)
 	err := p.set(offset, b)
@@ -169,11 +172,17 @@ func NewPage(cap int) (*Page, error) {
 }
 
 func NewPageBytes(b []byte) (p *Page, err error) {
-	l := MaxLength(len(b))
-	p, err = NewPage(l)
+	p, err = NewPage(len(b))
 	if err != nil {
 		return nil, fmt.Errorf("file.Page: NewPageWithBytes: %w", err)
 	}
-	p.SetBytes(0, b)
+	_, err = p.bb.Seek(0)
+	if err != nil {
+		return nil, fmt.Errorf("file.Page: NewPageWithBytes: %w", err)
+	}
+	_, err = p.bb.Write(b)
+	if err != nil {
+		return nil, fmt.Errorf("file.Page: NewPageWithBytes: %w", err)
+	}
 	return p, nil
 }

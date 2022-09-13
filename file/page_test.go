@@ -77,17 +77,18 @@ func TestGetString(t *testing.T) {
 		{"buffer", 0, "buffer", nil},
 		{"buffer", 14, "", io.EOF},
 		{"buffer", 100, "", bytes.ErrOutOfRange},
+		{"123", 0, "123", nil},
 	}
 	for _, test := range getStringTests {
-		p, err := NewPageBytes([]byte(test.buffer))
+		p, err := NewPage(len(test.buffer) + INT64_BYTES)
+		p.SetString(0, test.buffer)
 		if err != nil {
 			panic("")
 		}
 		var str string
 		str, err = p.GetString(test.offset)
 		if str != test.expected {
-			a := p.Contents()
-			t.Errorf("expected %q, got %q, contents %v", test.expected, str, a)
+			t.Errorf("expected %q, got %q, contents %v", test.expected, str, p.Contents())
 		}
 		if !errors.Is(err, test.err) {
 			t.Errorf("expected %v, got %v", test.err, err)
