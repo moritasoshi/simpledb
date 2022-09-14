@@ -7,11 +7,11 @@ import (
 )
 
 type Iterator struct {
-	fm         *file.Manager
-	blk        *file.BlockId
-	p          *file.Page
-	currentPos int
-	boundary   int
+	fm       *file.Manager
+	blk      *file.BlockId
+	p        *file.Page
+	pos      int
+	boundary int
 }
 
 func NewIterator(fm *file.Manager, blk *file.BlockId) *Iterator {
@@ -30,25 +30,25 @@ func NewIterator(fm *file.Manager, blk *file.BlockId) *Iterator {
 	return iter
 }
 
-// Determines if the current log record is the earliest record in the log file.
-func (iter *Iterator) hasNext() bool {
-	return iter.currentPos < iter.fm.BlockSize() || iter.blk.Number() > 0
-}
-
-// Moves to the next log record in the block.
-func (iter *Iterator) next() []byte {
-	if iter.currentPos == iter.fm.BlockSize() {
-		iter.blk = file.NewBlockId(iter.blk.Filename(), iter.blk.Number()-1)
-		iter.moveToBlock(iter.blk)
-	}
-	rec, _ := iter.p.GetBytes(iter.currentPos)
-	iter.currentPos += INT64_BYTES + len(rec)
-	return rec
-}
-
 // Moves to the specified block
 func (iter *Iterator) moveToBlock(blk *file.BlockId) {
 	iter.fm.Read(blk, iter.p)
 	iter.boundary, _ = iter.p.GetInt(0)
-	iter.currentPos = iter.boundary
+	iter.pos = iter.boundary
+}
+
+// Determines if the current log record is the earliest record in the log file.
+func (iter *Iterator) hasNext() bool {
+	return iter.pos < iter.fm.BlockSize() || iter.blk.Number() > 0
+}
+
+// Moves to the next log record in the block.
+func (iter *Iterator) next() []byte {
+	if iter.pos == iter.fm.BlockSize() {
+		iter.blk = file.NewBlockId(iter.blk.Filename(), iter.blk.Number()-1)
+		iter.moveToBlock(iter.blk)
+	}
+	rec, _ := iter.p.GetBytes(iter.pos)
+	iter.pos += file.MaxLength(len(rec))
+	return rec
 }
