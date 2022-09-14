@@ -6,7 +6,7 @@ import (
 	"github.com/moritasoshi/simpledb/file"
 )
 
-type Iterator struct {
+type iterator struct {
 	fm       *file.Manager
 	blk      *file.BlockId
 	p        *file.Page
@@ -14,12 +14,12 @@ type Iterator struct {
 	boundary int
 }
 
-func NewIterator(fm *file.Manager, blk *file.BlockId) *Iterator {
+func newIterator(fm *file.Manager, blk *file.BlockId) *iterator {
 	p, err := file.NewPage(fm.BlockSize())
 	if err != nil {
 		log.Fatal(err)
 	}
-	iter := &Iterator{
+	iter := &iterator{
 		fm:  fm,
 		blk: blk,
 		p:   p,
@@ -31,19 +31,20 @@ func NewIterator(fm *file.Manager, blk *file.BlockId) *Iterator {
 }
 
 // Moves to the specified block
-func (iter *Iterator) moveToBlock(blk *file.BlockId) {
+func (iter *iterator) moveToBlock(blk *file.BlockId) {
 	iter.fm.Read(blk, iter.p)
 	iter.boundary, _ = iter.p.GetInt(0)
 	iter.pos = iter.boundary
 }
 
 // Determines if the current log record is the earliest record in the log file.
-func (iter *Iterator) hasNext() bool {
+// hasNext returns false when there are no more records in the page and no more previous blocks.
+func (iter *iterator) hasNext() bool {
 	return iter.pos < iter.fm.BlockSize() || iter.blk.Number() > 0
 }
 
 // Moves to the next log record in the block.
-func (iter *Iterator) next() []byte {
+func (iter *iterator) next() []byte {
 	if iter.pos == iter.fm.BlockSize() {
 		iter.blk = file.NewBlockId(iter.blk.Filename(), iter.blk.Number()-1)
 		iter.moveToBlock(iter.blk)

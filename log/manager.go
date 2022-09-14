@@ -110,9 +110,9 @@ func (lm *Manager) Flush(lsn int) {
 	}
 }
 
-func (lm *Manager) Iterator() *Iterator {
+func (lm *Manager) Iterator() *iterator {
 	lm.flush()
-	return NewIterator(lm.fm, lm.currentBlock)
+	return newIterator(lm.fm, lm.currentBlock)
 }
 
 // Write the buffer to the log file.
