@@ -52,12 +52,9 @@ func printLogRecords(lm *Manager, msg string) {
 }
 
 func createRecords(lm *Manager, start int, end int) {
-	// fmt.Print("Creating records: ")
 	for i := start; i <= end; i++ {
 		rec := createLogRecords(lm, "record"+strconv.Itoa(i), i+100)
-		// lsn := lm.Append(rec)
-		_ = lm.Append(rec)
-		// fmt.Print(lsn, " ")
+		lm.Append(rec)
 	}
 	fmt.Println()
 }

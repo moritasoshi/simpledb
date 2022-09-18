@@ -21,7 +21,7 @@ var (
 
 // String returns the contents of the buffer as a string.
 func (b *Buffer) String() string {
-	if b.buf == nil {
+	if b == nil {
 		return "<nil>"
 	}
 	return string(b.buf[b.off:])
@@ -59,9 +59,7 @@ func (bb *Buffer) Seek(offset int) (int, error) {
 	return offset, nil
 }
 
-func (bb *Buffer) Cap() int {
-	return bb.cap
-}
+func (bb *Buffer) Cap() int { return bb.cap }
 
 func NewBuffer(cap int) (*Buffer, error) {
 	if cap < 0 {

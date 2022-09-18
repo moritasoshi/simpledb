@@ -7,6 +7,13 @@ type BlockId struct {
 	blknum   int
 }
 
+func (a *BlockId) Equals(b *BlockId) bool {
+	if a == nil || b == nil {
+		return false
+	}
+	return a.filename == b.filename && a.blknum == b.blknum
+}
+
 func NewBlockId(filename string, blknum int) *BlockId {
 	if blknum < 0 {
 		log.Fatal("block number should be natural number")
