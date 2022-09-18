@@ -1,6 +1,8 @@
 package util
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+)
 
 const INT64_BYTES = 8
 
@@ -10,7 +12,9 @@ func Int64ToBytes(i int64) []byte {
 	return b
 }
 
-func BytesToInt64(b []byte) int64 {
-	data := binary.BigEndian.Uint64(b)
+func BytesToInt64(s []byte) int64 {
+	var b [INT64_BYTES]byte
+	copy(b[8-len(s):], s)
+	data := binary.BigEndian.Uint64(b[:])
 	return int64(data)
 }
