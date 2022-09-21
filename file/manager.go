@@ -95,9 +95,7 @@ func (fm *Manager) CountBlocks(filename string) int {
 	return int(fi.Size()) / fm.blockSize
 }
 
-func (fm *Manager) BlockSize() int {
-	return fm.blockSize
-}
+func (fm *Manager) BlockSize() int { return fm.blockSize }
 
 // ファイルを取得
 // 存在しなければ作成する

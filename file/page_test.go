@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/moritasoshi/simpledb/bytes"
+	"github.com/moritasoshi/simpledb/util"
 )
 
 func TestNewPage(t *testing.T) {
@@ -67,20 +68,21 @@ func TestSetString(t *testing.T) {
 	}
 }
 
+var getStringTests = []struct {
+	buffer   string
+	offset   int
+	expected string
+	err      error
+}{
+	{"buffer", 0, "buffer", nil},
+	{"buffer", 14, "", io.EOF},
+	{"buffer", 100, "", bytes.ErrOutOfRange},
+	{"123", 0, "123", nil},
+}
+
 func TestGetString(t *testing.T) {
-	var getStringTests = []struct {
-		buffer   string
-		offset   int
-		expected string
-		err      error
-	}{
-		{"buffer", 0, "buffer", nil},
-		{"buffer", 14, "", io.EOF},
-		{"buffer", 100, "", bytes.ErrOutOfRange},
-		{"123", 0, "123", nil},
-	}
 	for _, test := range getStringTests {
-		p, err := NewPage(len(test.buffer) + INT64_BYTES)
+		p, err := NewPage(len(test.buffer) + util.INT64_BYTES)
 		p.SetString(0, test.buffer)
 		if err != nil {
 			panic("")
