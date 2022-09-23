@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/moritasoshi/simpledb/file"
+	"github.com/moritasoshi/simpledb/util"
 )
 
 const TEST_DIR = "logtest"
@@ -25,10 +26,10 @@ func TestLog(t *testing.T) {
 	// printLogRecords(lm, "The initial empty log file:")
 	fmt.Println("done")
 	createRecords(lm, 1, 35)
-	printLogRecords(lm, "The log file noe has these records:")
+	printLogRecords(lm, "The log file has these records:")
 	createRecords(lm, 36, 70)
 	lm.Flush(65)
-	printLogRecords(lm, "The log file noe has these records:")
+	printLogRecords(lm, "The log file has these records:")
 
 	t.Run("testlog", func(t *testing.T) {
 		if got := true; !got {
@@ -40,8 +41,8 @@ func TestLog(t *testing.T) {
 func printLogRecords(lm *Manager, msg string) {
 	fmt.Println(msg)
 	iter := lm.Iterator()
-	for iter.hasNext() {
-		rec := iter.next()
+	for iter.HasNext() {
+		rec := iter.Next()
 		p, _ := file.NewPageBytes(rec)
 		s, _ := p.GetString(0)
 		nPos := file.MaxLength(len(s))
@@ -61,7 +62,7 @@ func createRecords(lm *Manager, start int, end int) {
 
 // Create a log record having two values: a string and an integer.
 func createLogRecords(lm *Manager, s string, n int) []byte {
-	size := file.MaxLength(len(s)) + INT64_BYTES*2
+	size := file.MaxLength(len(s)) + util.INT64_BYTES*2
 	p, _ := file.NewPage(size)
 	p.SetString(0, s)
 	p.SetInt(file.MaxLength(len(s)), n)

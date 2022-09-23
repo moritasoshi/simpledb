@@ -13,13 +13,13 @@ package log
 
 // a block(page) and log records
 //
-// ------------------------------------------------------------------------------------
-// | block size (400 bytes)                                                           |
-// ------------------------------------------------------------------------------------
-// |                     |                                      ||                    |
-// | boundary (16 bytes) | .................................... || record1 (20 bytes) |
-// |                     |                                      ||                    |
-// ------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------
+// | block size (400 bytes)                                                          |
+// -----------------------------------------------------------------------------------
+// |                    |                                      ||                    |
+// | boundary (8 bytes) | .................................... || record1 (20 bytes) |
+// |                    |                                      ||                    |
+// -----------------------------------------------------------------------------------
 //
 // boundary = 400 - 20 =  380
 
@@ -28,10 +28,10 @@ import (
 	"sync"
 
 	"github.com/moritasoshi/simpledb/file"
+	"github.com/moritasoshi/simpledb/util"
 )
 
-const INT64_BYTES = 8
-const BOUNDARY_BYTES = INT64_BYTES * 2
+const BOUNDARY_BYTES = util.INT64_BYTES
 
 type Manager struct {
 	mu           sync.Mutex
@@ -74,9 +74,12 @@ func NewManager(fm *file.Manager, filename string) *Manager {
 // The beginning of the buffer contains the location of the last-written record (the "boundary").
 // Storing the records backwards makes it easy to read them in reverse order.
 func (lm *Manager) Append(rec []byte) int {
-	boundary, _ := lm.page.GetInt(0)
+	boundary, err := lm.page.GetInt(0)
+	if err != nil {
+		log.Fatal(err)
+	}
 	len := file.MaxLength(len(rec))
-	// no capacity, so create a new one.
+	// If no capacity, then create a new one.
 	if boundary-len < BOUNDARY_BYTES {
 		lm.flush()
 		p, err := file.NewPage(lm.fm.BlockSize())
@@ -85,12 +88,19 @@ func (lm *Manager) Append(rec []byte) int {
 		}
 		lm.page = p
 		lm.currentBlock = lm.AppendNewBlock()
-		boundary, _ = lm.page.GetInt(0)
+		boundary, err = lm.page.GetInt(0)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	pos := boundary - len
-	lm.page.SetBytes(pos, rec)
+	if err = lm.page.SetBytes(pos, rec); err != nil {
+		log.Fatal(err)
+	}
 	// set the boundary
-	lm.page.SetInt(0, pos)
+	if err = lm.page.SetInt(0, pos); err != nil {
+		log.Fatal(err)
+	}
 	lm.latestLSN += 1
 	return lm.latestLSN
 }
@@ -99,7 +109,9 @@ func (lm *Manager) Append(rec []byte) int {
 func (lm *Manager) AppendNewBlock() *file.BlockId {
 	blk := lm.fm.Append(lm.filename)
 	// set the boundary on the head of a log record.
-	lm.page.SetInt(0, lm.fm.BlockSize())
+	if err := lm.page.SetInt(0, lm.fm.BlockSize()); err != nil {
+		log.Fatal(err)
+	}
 	lm.fm.Write(blk, lm.page)
 	return blk
 }
