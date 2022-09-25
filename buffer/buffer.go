@@ -1,5 +1,8 @@
 package buffer
 
+// A Buffer is the object that contains status information, such as
+// whether it is pinned and, if so, what block it is assigned to.
+
 import (
 	"fmt"
 
@@ -8,19 +11,20 @@ import (
 )
 
 type Buffer struct {
-	fm       *file.Manager
-	lm       *log.Manager
 	contents *file.Page
 	blk      *file.BlockId
 	pins     int // the number of times the page is pinned
 	txnum    int // transaction number identifies the transaction
 	lsn      int // log sequence number
+
+	fm *file.Manager
+	lm *log.Manager
 }
 
 func NewBuffer(fm *file.Manager, lm *log.Manager) *Buffer {
 	p, err := file.NewPage(fm.BlockSize())
 	if err != nil {
-		fmt.Errorf("buffer.Buffer: NewBuffer: %w", err)
+		panic(fmt.Errorf("buffer.Buffer: NewBuffer: %w", err))
 	}
 	return &Buffer{
 		fm:       fm,

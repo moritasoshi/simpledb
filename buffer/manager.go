@@ -3,7 +3,6 @@ package buffer
 // The buffer manager allocates several pages, called the "buffer pool"
 // Once all buffers are loaded, buffer manager has to replace the unpinned block
 // in some candidate buffer to serve new pin request.
-// Each database system has one buffer manager.
 
 import (
 	"errors"
