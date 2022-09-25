@@ -47,16 +47,16 @@ func (rm *Manager) Recover() {
 func writeLog(lm *log.Manager, txNum int, recordType int) int {
 	switch recordType {
 	case START, COMMIT, ROLLBACK:
-		rec := make([]byte, 4*util.INT64_BYTES)
+		rec := make([]byte, 2*util.INT64_BYTES)
 		p, err := file.NewPageBytes(rec)
 		if err != nil {
 			panic(err)
 		}
 		p.SetInt(0, recordType)
-		p.SetInt(2*util.INT64_BYTES, txNum)
+		p.SetInt(util.INT64_BYTES, txNum)
 		return lm.Append(rec)
 	case CHECKPOINT:
-		rec := make([]byte, 2*util.INT64_BYTES)
+		rec := make([]byte, util.INT64_BYTES)
 		p, err := file.NewPageBytes(rec)
 		if err != nil {
 			panic(err)
