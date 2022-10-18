@@ -13,7 +13,9 @@ import (
 )
 
 type Manager struct {
-	bufferPool   []*Buffer
+	bufferPool []*Buffer
+
+	// numAvailable is the size of remaining allocatable buffers
 	numAvailable int
 }
 
@@ -72,6 +74,9 @@ func waitingTooLong(start time.Time) bool {
 	return time.Since(start) > MAX_TIME
 }
 
+// 対象のブロックがすでにバッファプールに割り当てられていればそのバッファを返す
+// 割り当てられていなければ、利用可能なバッファを検索し入れ替える
+// 利用可能なバッファがない場合はnilを返す
 // If there is a buffer assigned to the pool, then Returns that buffer.
 // Otherwise, an unpinned buffer from the pool is chosen.
 // Returns nil if there are no available buffers.
@@ -85,6 +90,7 @@ func (bm *Manager) tryToPin(blk *file.BlockId) *Buffer {
 		}
 		buf.allocate(blk)
 	}
+	// 対象のバッファがピン留めされていない=新たに割り当てたバッファなので利用可能数を減らす
 	if !buf.IsPinned() {
 		bm.numAvailable--
 	}
@@ -92,6 +98,8 @@ func (bm *Manager) tryToPin(blk *file.BlockId) *Buffer {
 	return buf
 }
 
+// バッファプールから対象のブロックを割り当てたバッファを取得する
+// 対象のブロックが割り当て済みでなければnilを返す
 // Finds the specified block from the buffer pool.
 // Returns the target block if exists, or nil if it does not exist.
 func (bm *Manager) findExistingBuffer(blk *file.BlockId) *Buffer {
@@ -105,6 +113,8 @@ func (bm *Manager) findExistingBuffer(blk *file.BlockId) *Buffer {
 	return nil
 }
 
+// バッファプールの中からピン留めされていないバッファ検索して返す
+// 利用可能なバッファがなければnilを返す
 // Finds a unpinned buffer from the buffer pool.
 // Returns a unpinned block if exists, or nil if it does not exist.
 func (bm *Manager) chooseUnpinnedBuffer() *Buffer {
