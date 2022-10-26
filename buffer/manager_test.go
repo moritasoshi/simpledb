@@ -94,7 +94,7 @@ func TestPinSuccess(t *testing.T) {
 		fmt.Println("Pinning finished")
 		ch <- result{buf: buf, err: e}
 	}()
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 
 	fmt.Println("Unpinning...")
 	bm.Unpin(buffers[1])
@@ -103,6 +103,7 @@ func TestPinSuccess(t *testing.T) {
 	res := <-ch
 	buffers[2] = res.buf
 
+	printBuffers(buffers)
 
 	// ピン留めに成功していることを確認
 	if res.err != nil {

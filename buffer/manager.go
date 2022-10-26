@@ -6,6 +6,7 @@ package buffer
 
 import (
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/moritasoshi/simpledb/file"
@@ -13,9 +14,10 @@ import (
 )
 
 type Manager struct {
+	unpinned   *sync.Cond
 	bufferPool []*Buffer
 
-	// numAvailable is the size of remaining allocatable buffers
+	// numAvailable is the number of remaining allocatable buffers
 	numAvailable int
 }
 
@@ -29,6 +31,7 @@ func NewManager(fm *file.Manager, lm *log.Manager, bufferPoolSize int) *Manager 
 		pool[idx] = NewBuffer(fm, lm)
 	}
 	return &Manager{
+		unpinned:     sync.NewCond(&sync.Mutex{}),
 		bufferPool:   pool,
 		numAvailable: bufferPoolSize,
 	}
@@ -37,13 +40,30 @@ func NewManager(fm *file.Manager, lm *log.Manager, bufferPoolSize int) *Manager 
 // Pins a buffer to the specified block.
 // Potentially waits until a buffer becomes available.
 func (bm *Manager) Pin(blk *file.BlockId) (*Buffer, error) {
-	start := time.Now()
 	buf := bm.tryToPin(blk)
+
 	// Wait until some other unpins.
-	for buf == nil && !waitingTooLong(start) {
-		// TODO: wait until some other notifies unpinned.
-		buf = bm.tryToPin(blk)
+	if buf == nil {
+		c := make(chan struct{})
+		var goroutineRunning sync.WaitGroup
+		goroutineRunning.Add(1)
+		go func() {
+			goroutineRunning.Done()
+			bm.unpinned.L.Lock()
+			defer bm.unpinned.L.Unlock()
+			bm.unpinned.Wait()
+			close(c)
+		}()
+		goroutineRunning.Wait()
+		select {
+		case <-c:
+			// TODO: run tryToPin() before Unlock
+			buf = bm.tryToPin(blk)
+		case <-time.After(MAX_TIME):
+			buf = nil
+		}
 	}
+
 	if buf == nil {
 		return nil, ErrOperationAborted
 	}
@@ -55,7 +75,8 @@ func (bm *Manager) Unpin(buf *Buffer) {
 	buf.unpin()
 	if !buf.IsPinned() {
 		bm.numAvailable++
-		// TODO: notify any waiting threads.
+		// notify any waiting goroutines.
+		bm.unpinned.Broadcast()
 	}
 }
 
