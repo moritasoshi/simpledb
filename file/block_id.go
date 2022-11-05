@@ -13,9 +13,6 @@ func (a *BlockId) Equals(b *BlockId) bool {
 }
 
 func NewBlockId(filename string, blknum int) *BlockId {
-	if blknum < 0 {
-		panic("block number should be natural number")
-	}
 	if len(filename) <= 0 {
 		panic("filename should be 1 character or more")
 	}
