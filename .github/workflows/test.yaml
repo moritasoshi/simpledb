@@ -1,4 +1,4 @@
-name: Test simpledb codes
+name: Test
 
 on: push
 
@@ -13,5 +13,11 @@ jobs:
           - macOS-latest
           - windows-latest
     steps:
-      - name: test
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v3
+      - name: Setup Go 1.19.x
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.19.x'
+      - name: Test
         run: go test -coverprofile coverage.out -covermode atomic ./...
