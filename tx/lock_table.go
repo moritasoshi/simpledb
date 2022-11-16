@@ -17,7 +17,11 @@ type LockTable struct {
 	locks map[*file.BlockId]int
 }
 
-func NewLockTable() *LockTable { return &LockTable{} }
+func NewLockTable() *LockTable {
+	return &LockTable{
+		locks: make(map[*file.BlockId]int),
+	}
+}
 
 func (t *LockTable) SLock(blk *file.BlockId) error {
 	t.mu.Lock()
