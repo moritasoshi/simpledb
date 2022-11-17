@@ -59,7 +59,6 @@ func (rm *RecoveryManager) SetString(buf *buffer.Buffer, offset int, val string)
 		panic(err)
 	}
 	return writeSetStringLog(rm.lm, rm.txNum, buf.Block(), offset, oldVal)
-
 }
 
 func (rm *RecoveryManager) doRollback() {

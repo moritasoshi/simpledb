@@ -1,0 +1,29 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: golang:1.16-alpine
+    working_directory: /go/src/simpledb
+      - checkout
+
+  lint:
+    docker:
+      - image: golangci/golangci-lint:v1.37-alpine
+    steps:
+      - checkout
+      - run: golangci-lint run
+
+  test:
+    docker:
+      - image: golang:1.16
+    steps:
+      - checkout
+      - run: go test -coverprofile coverage.out -covermode atomic ./...
+
+workflows:
+  build_test:
+    jobs:
+      - build
+      - lint
+      - test
