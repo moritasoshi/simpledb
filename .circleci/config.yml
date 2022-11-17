@@ -2,11 +2,19 @@ version: 2.1
 
 jobs:
   build:
-    working_directory: ~/simpledb
     docker:
-      - image: circleci/golang:1.14.6
+      - image: cimg/go:1.16
     steps:
       - checkout
+      - run: go build
       - run:
-          name: Run tests
-          command: go test -coverprofile coverage.out -covermode atomic ./...
+          name: "Create a temp directory for artifacts"
+          command: |
+            mkdir -p /tmp/artifacts
+      - run:
+          command: |
+            go test -coverprofile=c.out
+            go tool cover -html=c.out -o coverage.html
+            mv coverage.html /tmp/artifacts
+      - store_artifacts:
+          path: /tmp/artifacts
