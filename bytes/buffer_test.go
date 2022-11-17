@@ -10,6 +10,14 @@ import (
 
 const wantErr, noErr = true, false
 
+func TestString(t *testing.T) {
+	buf, _ := bytes.NewBuffer(0)
+	buf = nil
+	if buf.String() != "<nil>" {
+		t.Errorf("expected %q, got %q", "<nil>", buf.String())
+	}
+}
+
 func TestByteBuffer(t *testing.T) {
 	buf, _ := bytes.NewBuffer(400)
 
