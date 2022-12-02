@@ -42,7 +42,8 @@ func TestTx(t *testing.T) {
 	fmt.Println("new value at location 40 =", tx3.GetString(blk, 40))
 	tx3.SetInt(blk, 80, 9999, true)
 	fmt.Println("pre-rollback value at location 80 =", tx3.GetInt(blk, 80))
-	tx3.Rollback()
+	// tx3.Rollback()
+	tx3.Commit()
 
 	tx4 := tx.NewTransaction(fm, lm, bm)
 	tx4.Pin(blk)

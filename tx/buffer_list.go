@@ -1,9 +1,13 @@
 package tx
 
 import (
+	"errors"
+
 	"github.com/moritasoshi/simpledb/buffer"
 	"github.com/moritasoshi/simpledb/file"
 )
+
+var ErrNotPinned = errors.New("buffer.BufferList: blockId not pinned")
 
 type BufferList struct {
 	buffers map[*file.BlockId]*buffer.Buffer
@@ -19,6 +23,8 @@ func NewBufferList(bm *buffer.Manager) *BufferList {
 	}
 }
 
+// Returns the allocated buffer for the given blockId from buffer list.
+// nil if the given blockId is unpinned.
 func (blist *BufferList) getBuffer(blk *file.BlockId) *buffer.Buffer {
 	b, _ := blist.buffers[blk]
 	return b

@@ -111,6 +111,7 @@ func (tx *Transaction) Append(filename string) *file.BlockId {
 }
 func (tx *Transaction) BlockSize() int        { return tx.fm.BlockSize() }
 func (tx *Transaction) availableBuffers() int { return tx.bm.Available() }
+func (tx *Transaction) Txnum() int            { return tx.txnum }
 
 func nextTxNumber() int {
 	nextTxNum++
