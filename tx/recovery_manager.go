@@ -1,6 +1,8 @@
 package tx
 
 import (
+	"fmt"
+
 	"github.com/moritasoshi/simpledb/buffer"
 	"github.com/moritasoshi/simpledb/file"
 	"github.com/moritasoshi/simpledb/log"
@@ -46,8 +48,10 @@ func (rm *RecoveryManager) Recover() {
 	rm.lm.Flush(lsn)
 }
 
+// Records the value before change
 func (rm *RecoveryManager) SetInt(buf *buffer.Buffer, offset int, val int) int {
 	oldVal, err := buf.Contents().GetInt(offset)
+	fmt.Printf("RecoveryManager.SetInt(%+v, %v, %v) has oldVal: %v\n", buf, offset, val, oldVal)
 	if err != nil {
 		panic(err)
 	}
@@ -104,7 +108,7 @@ func writeLog(lm *log.Manager, txNum int, recordType int) int {
 		}
 		p.SetInt(0, recordType)
 		p.SetInt(util.INT64_BYTES, txNum)
-		return lm.Append(rec)
+		return lm.Append(p.Contents())
 	case CHECKPOINT:
 		rec := make([]byte, util.INT64_BYTES)
 		p, err := file.NewPageBytes(rec)
@@ -112,12 +116,13 @@ func writeLog(lm *log.Manager, txNum int, recordType int) int {
 			panic(err)
 		}
 		p.SetInt(0, recordType)
-		return lm.Append(rec)
+		return lm.Append(p.Contents())
 	default:
 		panic("recordType invalid")
 	}
 }
 
+// Add SetInt log record which contains the information of record type, txNum, filename, blk number, offsett, value
 func writeSetIntLog(lm *log.Manager, txNum int, blk *file.BlockId, offset int, val int) int {
 	tpos := util.INT64_BYTES
 	fpos := tpos + util.INT64_BYTES
@@ -137,7 +142,7 @@ func writeSetIntLog(lm *log.Manager, txNum int, blk *file.BlockId, offset int, v
 	p.SetInt(opos, offset)
 	p.SetInt(vpos, val)
 
-	return lm.Append(rec)
+	return lm.Append(p.Contents())
 }
 func writeSetStringLog(lm *log.Manager, txNum int, blk *file.BlockId, offset int, val string) int {
 	tpos := util.INT64_BYTES
@@ -158,5 +163,5 @@ func writeSetStringLog(lm *log.Manager, txNum int, blk *file.BlockId, offset int
 	p.SetInt(opos, offset)
 	p.SetString(vpos, val)
 
-	return lm.Append(rec)
+	return lm.Append(p.Contents())
 }

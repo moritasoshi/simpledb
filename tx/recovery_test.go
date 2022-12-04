@@ -52,10 +52,10 @@ func TestRollback(t *testing.T) {
 	tx2.Pin(blk0)
 	pos = 0
 	for i := 0; i < 6; i++ {
-		tx2.SetInt(blk0, pos, pos+100, false)
+		tx2.SetInt(blk0, pos, pos+100, true)
 		pos += util.INT64_BYTES
 	}
-	tx2.SetString(blk0, pos, "xyz", false)
+	tx2.SetString(blk0, pos, "xyz", true)
 	bm.FlushAll(tx2.Txnum())
 
 	// assert
@@ -73,6 +73,26 @@ func TestRollback(t *testing.T) {
 	if val0 != "xyz" {
 		t.Errorf("want %v got %v", "xyz", val0)
 	}
+
+	// rollback
+	tx2.Rollback()
+
+	// assert
+	p0, _ = file.NewPage(fm.BlockSize())
+	fm.Read(blk0, p0)
+	pos = 0
+	for i := 0; i < 6; i++ {
+		val0, _ := p0.GetInt(pos)
+		if val0 != pos {
+			t.Errorf("want %v got %v", pos, val0)
+		}
+		pos += util.INT64_BYTES
+	}
+	val0, _ = p0.GetString(pos)
+	if val0 != "abc" {
+		t.Errorf("want %v got %v", "abc", val0)
+	}
+
 }
 
 func TestRecovery(t *testing.T) {

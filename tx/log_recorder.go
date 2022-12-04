@@ -12,7 +12,7 @@ type LogRecorder interface {
 }
 
 const (
-	CHECKPOINT = 1 << iota
+	CHECKPOINT = iota + 1
 	START
 	COMMIT
 	ROLLBACK
@@ -99,7 +99,7 @@ type start struct {
 }
 
 func NewStart(p *file.Page) LogRecorder {
-	tpos := 2 * util.INT64_BYTES
+	tpos := util.INT64_BYTES
 	txNum, err := p.GetInt(tpos)
 	if err != nil {
 		panic(err)
@@ -122,7 +122,7 @@ func NewSetInt(p *file.Page) LogRecorder {
 	if err != nil {
 		panic(err)
 	}
-	fpos := tpos * util.INT64_BYTES
+	fpos := tpos + util.INT64_BYTES
 	filename, err := p.GetString(fpos)
 	if err != nil {
 		panic(err)
@@ -172,7 +172,7 @@ func NewSetString(p *file.Page) LogRecorder {
 	if err != nil {
 		panic(err)
 	}
-	fpos := tpos * util.INT64_BYTES
+	fpos := tpos + util.INT64_BYTES
 	filename, err := p.GetString(fpos)
 	if err != nil {
 		panic(err)
