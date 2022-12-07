@@ -11,6 +11,10 @@ type LogRecorder interface {
 	Undo(tx *Transaction)
 }
 
+// There are six kinds of log record.
+// A START record is written              when a transaction begins.
+// A COMMIT or ROLLBACK record is written when a transaction completes.
+// A SETXXX record is written             when a transaction modifies a value.
 const (
 	CHECKPOINT = iota + 1
 	START

@@ -9,6 +9,8 @@ import (
 	"github.com/moritasoshi/simpledb/util"
 )
 
+// The RecoveryManager logs information about the transaction's activities, in order to be able to roll back a transaction.
+
 type RecoveryManager struct {
 	lm    *log.Manager
 	bm    *buffer.Manager
@@ -65,6 +67,8 @@ func (rm *RecoveryManager) SetString(buf *buffer.Buffer, offset int, val string)
 	return writeSetStringLog(rm.lm, rm.txNum, buf.Block(), offset, oldVal)
 }
 
+// Iterates through the log record.
+// Each time it calls the record's Undo method until it finds the START record.
 func (rm *RecoveryManager) doRollback() {
 	iter := rm.lm.Iterator()
 	for iter.HasNext() {
@@ -79,6 +83,7 @@ func (rm *RecoveryManager) doRollback() {
 	}
 }
 
+// Rolls back all uncompleted transactions.
 func (rm *RecoveryManager) doRecover() {
 	var finished map[int]struct{}
 	iter := rm.lm.Iterator()

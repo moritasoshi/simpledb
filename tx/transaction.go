@@ -23,6 +23,7 @@ type Transaction struct {
 	fm *file.Manager
 }
 
+// Creates a new transaction.
 func NewTransaction(fm *file.Manager, lm *log.Manager, bm *buffer.Manager) *Transaction {
 	tx := &Transaction{
 		fm:    fm,
@@ -35,6 +36,7 @@ func NewTransaction(fm *file.Manager, lm *log.Manager, bm *buffer.Manager) *Tran
 	return tx
 }
 
+// Commits the transaction.
 func (tx *Transaction) Commit() {
 	tx.recoveryMgr.Commit()
 	fmt.Println("transaction", tx.txnum, "committed.")
@@ -42,6 +44,7 @@ func (tx *Transaction) Commit() {
 	tx.mybuffers.unpinAll()
 }
 
+// Rolls back the transaction.
 func (tx *Transaction) Rollback() {
 	tx.recoveryMgr.Rollback()
 	fmt.Println("transaction", tx.txnum, "rollback.")
@@ -49,6 +52,7 @@ func (tx *Transaction) Rollback() {
 	tx.mybuffers.unpinAll()
 }
 
+// Rolls back all uncommitted transactions.
 func (tx *Transaction) Recover() {
 	tx.bm.FlushAll(tx.txnum)
 	tx.recoveryMgr.Recover()
@@ -57,6 +61,7 @@ func (tx *Transaction) Recover() {
 func (tx *Transaction) Pin(blk *file.BlockId)   { tx.mybuffers.pin(blk) }
 func (tx *Transaction) Unpin(blk *file.BlockId) { tx.mybuffers.unpin(blk) }
 
+// Reads integer value with SLock.
 func (tx *Transaction) GetInt(blk *file.BlockId, offset int) int {
 	tx.concurMgr.SLock(blk)
 	buf := tx.mybuffers.getBuffer(blk)
@@ -66,6 +71,8 @@ func (tx *Transaction) GetInt(blk *file.BlockId, offset int) int {
 	}
 	return i
 }
+
+// Reads string value with SLock.
 func (tx *Transaction) GetString(blk *file.BlockId, offset int) string {
 	tx.concurMgr.SLock(blk)
 	buf := tx.mybuffers.getBuffer(blk)
@@ -75,6 +82,8 @@ func (tx *Transaction) GetString(blk *file.BlockId, offset int) string {
 	}
 	return val
 }
+
+// Writes integer value with XLock.
 func (tx *Transaction) SetInt(blk *file.BlockId, offset int, val int, okToLog bool) {
 	tx.concurMgr.XLock(blk)
 	buf := tx.mybuffers.getBuffer(blk)
@@ -86,6 +95,8 @@ func (tx *Transaction) SetInt(blk *file.BlockId, offset int, val int, okToLog bo
 	p.SetInt(offset, val)
 	buf.SetModified(tx.txnum, lsn)
 }
+
+// Writes string value with XLock.
 func (tx *Transaction) SetString(blk *file.BlockId, offset int, val string, okToLog bool) {
 	tx.concurMgr.XLock(blk)
 	buf := tx.mybuffers.getBuffer(blk)
@@ -98,19 +109,19 @@ func (tx *Transaction) SetString(blk *file.BlockId, offset int, val string, okTo
 	buf.SetModified(tx.txnum, lsn)
 }
 
+// ???
 func (tx *Transaction) Size(filename string) int {
 	dummyBlk := file.NewBlockId(filename, END_OF_FILE)
 	tx.concurMgr.SLock(dummyBlk)
 	return tx.fm.CountBlocks(filename)
 }
-
 func (tx *Transaction) Append(filename string) *file.BlockId {
 	dummyBlk := file.NewBlockId(filename, END_OF_FILE)
 	tx.concurMgr.XLock(dummyBlk)
 	return tx.fm.Append(filename)
 }
 func (tx *Transaction) BlockSize() int        { return tx.fm.BlockSize() }
-func (tx *Transaction) availableBuffers() int { return tx.bm.Available() }
+func (tx *Transaction) AvailableBuffers() int { return tx.bm.Available() }
 func (tx *Transaction) Txnum() int            { return tx.txnum }
 
 func nextTxNumber() int {

@@ -92,7 +92,6 @@ func TestRollback(t *testing.T) {
 	if val0 != "abc" {
 		t.Errorf("want %v got %v", "abc", val0)
 	}
-
 }
 
 func TestRecovery(t *testing.T) {
